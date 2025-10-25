@@ -18,6 +18,8 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CategoryController.class);
+
     @GetMapping("/public/categories")
     public ResponseEntity<List<Category>> getAllCategories() {
         try {
