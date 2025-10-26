@@ -1,6 +1,7 @@
 package com.ecommerce.kco_ecom.Exceptions;
 
 
+import com.ecommerce.kco_ecom.Payload.APIResponse;
 import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +17,16 @@ import java.util.Map;
 public class MyGlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> myMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> response = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(err -> {
-            String fieldName = ((FieldError)err).getField();
-            String message = err.getDefaultMessage();
-            response.put(fieldName, message);
-        });
-        return new ResponseEntity<Map<String,String>>(response, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<APIResponse> myMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        APIResponse apiResponse = new APIResponse(ex.getMessage(), false);
+        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
 
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> myResourceNotFoundException(ResourceNotFoundException ex) {
-        String message = ex.getMessage();
-        return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);
+    public ResponseEntity<APIResponse> myResourceNotFoundException(ResourceNotFoundException ex) {
+        APIResponse apiResponse = new APIResponse(ex.getMessage(), false);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+
     }
 }

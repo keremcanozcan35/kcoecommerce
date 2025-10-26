@@ -1,15 +1,13 @@
 package com.ecommerce.kco_ecom.Controller;
 
-import com.ecommerce.kco_ecom.Model.Category;
+import com.ecommerce.kco_ecom.Config.AppConstants;
+import com.ecommerce.kco_ecom.Payload.CategoryDTO;
+import com.ecommerce.kco_ecom.Payload.CategoryResponse;
 import com.ecommerce.kco_ecom.Service.CategoryService;
-import jakarta.validation.Valid;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -18,67 +16,54 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    @GetMapping("/echo")
+    public ResponseEntity<String> echoMessage(@RequestParam(name = "message") String message){
+        return new ResponseEntity<>("Echoed message from CategoryController" + message, HttpStatus.OK);
+    }
+
     @GetMapping("/public/categories")
-    public ResponseEntity<List<Category>> getAllCategories() {
+    public ResponseEntity<CategoryResponse> getAllCategories(
+            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(name = "sortBy",defaultValue = AppConstants.SORT_BY) String sortBy,
+            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR) String sortOrder
+    ) {
         try {
-            List<Category> categories = categoryService.getAllCategories();
-            return ResponseEntity.ok(categories);
+            CategoryResponse categoryResponse = categoryService.getAllCategories(pageNumber, pageSize,sortBy,sortOrder);
+            return ResponseEntity.ok(categoryResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PostMapping("/public/categories")
-    public ResponseEntity<String> createCategory(@RequestBody Category category){
-        try {
-            if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Error: Category name cannot be null or empty");
-            }
-
-            categoryService.createCategory(category);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Category created successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred: " + e.getMessage());
-        }
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+        CategoryDTO savedCategoryDTO = categoryService.createCategory(categoryDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedCategoryDTO);
     }
 
+
     @DeleteMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId){
-        try {
-            String result = categoryService.deleteCategory(categoryId);
-            return ResponseEntity.ok(result);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred: " + e.getMessage());
-        }
+    public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long categoryId) {
+
+        CategoryDTO result = categoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok(result);
+
     }
 
     @PutMapping("/public/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @RequestBody Category category) {
-        try {
-            if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Error: Category name cannot be null or empty");
-            }
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long categoryId, @RequestBody CategoryDTO categoryDTO) {
 
-            // Assuming there's an updateCategory method in the service layer
-            categoryService.updateCategory(categoryId, category);
-            return ResponseEntity.ok("Category updated successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred: " + e.getMessage());
+        if (categoryDTO.getCategoryName() == null || categoryDTO.getCategoryName().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+
         }
+
+
+        // Assuming there's an updateCategory method in the service layer
+        CategoryDTO savedCategoryDTO = categoryService.updateCategory(categoryId, categoryDTO);
+        return new ResponseEntity<>(savedCategoryDTO, HttpStatus.OK);
+
+
     }
 }
